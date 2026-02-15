@@ -39,7 +39,7 @@ body {
   }
 
 h1 , h2 , h3  {
-  font-family: "Google Sans"; font-weight: 700; color: var(--text-color);
+  font-family: sans-serif; font-weight: 700; color: var(--text-color);
 }
 
 h1 { font-size: 50px; }
@@ -49,7 +49,7 @@ h1 { font-size: 50px; }
 p { font-size: 20px; }
 
 h1 > span {
-  font-family: "Google Sans"; font-weight: 700; color: var(--background);
+  font-family: sans-serif; font-weight: 700; color: var(--background);
     color: var(--accent);
 }
 
@@ -155,7 +155,7 @@ button {
     transition: 0.4s all;
 }
 
-.play { font-family: "Google Sans"; color: var(--text-color); background-color: var(--accent);}
+.play { font-family: sans-serif; color: var(--text-color); background-color: var(--accent);}
 
 button:hover {
     filter: brightness(80%);
@@ -250,7 +250,7 @@ button:hover {
     width: 100%;
   }
   #menubtns button {
-    font-family: "Google Sans";
+    font-family: sans-serif;
     padding: 5px 5px;
     font-size: 18px;
     border-radius: 15px;
