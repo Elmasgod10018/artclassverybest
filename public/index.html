@@ -135,6 +135,105 @@
       <a href="./about.html">About</a>
     </div>
   </div>
+	<!-- Pantalla de Login y Panel Admin -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f172a;color:white;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;">
+  <h2>Inicia sesión para entrar</h2>
+  <input id="email-input" type="email" placeholder="Tu correo" style="padding:10px;margin:5px;border-radius:5px;border:none;width:250px;">
+  <input id="pass-input" type="password" placeholder="Contraseña" style="padding:10px;margin:5px;border-radius:5px;border:none;width:250px;">
+  <div style="margin-top:10px;">
+    <button onclick="entrar()" style="padding:10px 20px;background:#2563eb;color:white;border:none;border-radius:5px;cursor:pointer;">Entrar</button>
+    <button onclick="registrar()" style="padding:10px 20px;background:#475569;color:white;border:none;border-radius:5px;cursor:pointer;">Registrarse</button>
+  </div>
+  <p id="auth-msg" style="color:#f87171;margin-top:10px;"></p>
+</div>
+
+<button id="admin-btn" onclick="abrirAdmin()" style="display:none;position:fixed;bottom:15px;right:15px;z-index:99998;padding:10px 15px;background:#dc2626;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">Panel Admin</button>
+
+<div id="admin-panel" style="display:none;position:fixed;inset:10%;background:#1e293b;color:white;z-index:99999;padding:20px;border-radius:12px;overflow:auto;font-family:sans-serif;box-shadow:0 0 30px rgba(0,0,0,0.8);">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h3>Gestión de Usuarios</h3>
+    <button onclick="document.getElementById('admin-panel').style.display='none'" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Cerrar</button>
+  </div>
+  <ul id="lista-usuarios" style="list-style:none;padding:0;margin-top:15px;"></ul>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://gstatic.com";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://gstatic.com";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://gstatic.com";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCBiv8-uWRtx4hh4UMTOLHgeE9ElIgtLws",
+    authDomain: "://firebaseapp.com",
+    projectId: "artclassverybest",
+    storageBucket: "artclassverybest.firebasestorage.app",
+    messagingSenderId: "389754515109",
+    appId: "1:389754515109:web:6692a521ab3ce43d75274c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const ADMIN_EMAIL = "y.madrid10018@gmail.com";
+
+  window.registrar = async () => {
+    const email = document.getElementById("email-input").value;
+    const pass = document.getElementById("pass-input").value;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await setDoc(doc(db, "usuarios", cred.user.uid), { email: email, baneado: false });
+    } catch (e) { document.getElementById("auth-msg").innerText = e.message; }
+  };
+
+  window.entrar = async () => {
+    const email = document.getElementById("email-input").value;
+    const pass = document.getElementById("pass-input").value;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) { document.getElementById("auth-msg").innerText = e.message; }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    const ref = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) await setDoc(ref, { email: user.email, baneado: false });
+    
+    if (snap.exists() && snap.data().baneado && user.email !== ADMIN_EMAIL) {
+      document.getElementById("auth-overlay").innerHTML = "<h2 style='color:#ef4444;'>Tu cuenta ha sido baneada por el administrador.</h2>";
+      return;
+    }
+
+    document.getElementById("auth-overlay").style.display = "none";
+    if (user.email === ADMIN_EMAIL) {
+      document.getElementById("admin-btn").style.display = "block";
+    }
+  });
+
+  window.abrirAdmin = async () => {
+    document.getElementById("admin-panel").style.display = "block";
+    const lista = document.getElementById("lista-usuarios");
+    lista.innerHTML = "Cargando...";
+    const querySnapshot = await getDocs(collection(db, "usuarios"));
+    lista.innerHTML = "";
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.email === ADMIN_EMAIL) return;
+      const li = document.createElement("li");
+      li.style = "display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #334155;";
+      li.innerHTML = `<span>${data.email} (${data.baneado ? "Baneado" : "Activo"})</span>
+        <button onclick="cambiarBan('${docSnap.id}', ${!data.baneado})" style="background:${data.baneado ? '#22c55e' : '#ef4444'};color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
+          ${data.baneado ? "Desbanear" : "Banear"}
+        </button>`;
+      lista.appendChild(li);
+    });
+  };
+
+  window.cambiarBan = async (uid, estado) => {
+    await updateDoc(doc(db, "usuarios", uid), { baneado: estado });
+    abrirAdmin();
+  };
+</script>
 </body>
 
 <script>
